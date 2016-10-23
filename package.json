@@ -1,5 +1,5 @@
 {
-  "name": "formation-focus",
+  "name": "formation-v3",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -9,14 +9,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/get-focus/formation-focus.git"
+    "url": "git+https://github.com/get-focus/formation-v3.git"
   },
   "author": "focus@kleegroup.com",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/get-focus/formation-focus/issues"
+    "url": "https://github.com/get-focus/formation-v3/issues"
   },
-  "homepage": "https://github.com/get-focus/formation-focus#readme",
+  "homepage": "https://github.com/get-focus/formation-v3#readme",
   "dependencies": {
     "reveal.js": "^3.1.0"
   }

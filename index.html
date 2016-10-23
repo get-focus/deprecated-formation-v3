@@ -141,16 +141,17 @@
 			<section data-markdown>
 # Les librairies coeur
 
-## [Focus Core](https://github.com/KleeGroup/focus-core)
-
-## [Focus Components](https://github.com/KleeGroup/focus-components)
+## [Focus Graph](https://github.com/get-focus/focus-graph)
+## [Focus Components](https://github.com/get-focus/focus-components)
+## [Focus Application](https://github.com/get-focus/focus-application)
+## [Focus Search](https://github.com/get-focus/focus-search)
 
 			</section>
 			<section data-markdown>
 # Les extensions
 
 ## [Focus file](https://github.com/KleeGroup/focus-file)
-
+## [Focus HelpCenter](https://github.com/get-focus/focus-help-center)
 ## [Focus Notification](https://github.com/KleeGroup/focus-notification)
 ## [Focus Comments](https://github.com/KleeGroup/focus-comments)
 </section>
@@ -209,7 +210,7 @@ import MovieDetailView from '../views/movie/detail';
 const route = [
     {
         path: 'movies/:id',
-        component: (props) => (<MovieDetailView id={parseInt(props.params.id)} {...props}/>)
+        component: (props) => &lt;MovieDetailView id={parseInt(props.params.id)} {...props}/>
     }
 ];
 
@@ -278,38 +279,24 @@ export const movie = {
 
 			</section>
 			<section>
-				<section><h1>Flux by Focus</h1></section>
+				<section><h1>Redux by Focus</h1></section>
 				<section data-markdown>
-					## flux by Facebook
-
-					![flux](https://facebook.github.io/flux/img/flux-simple-f8-diagram-with-client-action-1300w.png)
+					## Redux
+					![redux](https://cloud.githubusercontent.com/assets/10349407/19628799/f07ecb9c-9965-11e6-8a65-60bc55f5643d.PNG)
 				</section>
 				<section data-markdown>
-					## Architecture
+					# Redux
 
-![archi](https://cloud.githubusercontent.com/assets/286966/15237742/4df03ccc-18d1-11e6-9753-97777780453b.png)
-
+					![chemin](https://cloud.githubusercontent.com/assets/10349407/19628912/18009580-9969-11e6-9bb3-5f70c9308f65.PNG)
 				</section>
 				<section data-markdown>
-					# les stores
-
-					![stores](https://s3.amazonaws.com/media-p.slid.es/uploads/52889/images/1647931/store.PNG)
-				</section>
-				<section data-markdown>
-					# Flux
-
-					![flux1](https://s3.amazonaws.com/media-p.slid.es/uploads/52889/images/1647945/focus-flux1.PNG)
-				</section>
-				<section data-markdown>
-					# flux
-
-					![flux2](https://s3.amazonaws.com/media-p.slid.es/uploads/52889/images/1647946/focus-flux2.PNG)
+					# Les Providers
+					![capture](https://cloud.githubusercontent.com/assets/10349407/16381193/944d89fe-3c7b-11e6-9c05-d1b6c1d49a02.PNG)
 				</section>
 				<section data-markdown>
 # Service
 
 - Un service est une fonction
-- Un service appelle une url construite grâce à [urlbuilder](https://github.com/KleeGroup/focus-core/blob/develop/src/list/action-builder.js)
 - Un service retourne une `Promise`
 - On peut utiliser la méthode `fetch` de [focus](https://github.com/KleeGroup/focus-core/blob/develop/src/network/fetch.js)
 				</section>
@@ -317,132 +304,161 @@ export const movie = {
 					<h2>Exemple de service (retourne impérativement une Promise)</h2>
 					<pre>
 						<code class='javascript'>
-import fetch from 'focus-core/network/fetch';
-//Fait une reqête ajax
-import movieUrl from '../config/server/movies';
-// Les urls de ws sont configurées
-export default {
-    loadMovie(id) {
-        return fetch(movieUrl.loadMovie({urlData: {id}}));
-    },
-    saveMovieSynopsis(data) {
-        return fetch(movieUrl.saveMovie({urlData: {id: data.id}, data: {data}}));
-    },
-    saveMovieCaracteristics(data) {
-        return fetch(movieUrl.saveMovie({urlData: {id: data.id}, data: {data}}));
-    }
+import fetch from './fetch';
+
+export const loadUser = async ({id}) => {
+    const response = await fetch(`http://localhost:9999/x/complex/${id}`, 'GET')
+    const data = await response.response.json();
+    return data.user;
 }
 						</code>
 					</pre>
 				</section>
 				<section data-markdown>
-# store
+# Le Store
 
-- Un store est un objet qui contient une grappe de données
-- Associé à une notion de grappe d'objet ([corestore](https://github.com/KleeGroup/focus-core/blob/develop/src/store/CoreStore.js))
-- Il existe des stores spécialisées ([recherche](https://github.com/KleeGroup/focus-core/tree/develop/src/store/search), [liste](https://github.com/KleeGroup/focus-core/tree/develop/src/store/search))
-- Il peut notifier: d'un changement, d'une erreur
-- Chaque noeud de données peut avoir un statut
+Objet qui contient une grappe de données et permet de: 
+- fournir une méthode pour dispatcher une action : dispatch
+- fournir une méthode pour s'abonner à des changements sur un store.
+- Enregistrer l'arbre de reducer que vous avez produit afin que lorsqu'une action soit dispatchée, le nouveau state soit calculable via les reducers.
+- Fournir les enhancers de store qui sont surtout les middlewares qui on des buts variés et qu'il faut utiliser avec parcimonie.
 				</section>
 				<section>
-					<h2>Exemple de store</h2>
+					<h2>Exemple d'initialisation du store Redux </h2>
 					<pre>
 						<code class='javascript'>
-import {CoreStore} from 'focus-core/store';
-const movieStore = new CoreStore({
-    definition: {
-        movie: 'movie',
-		actors: 'actors'
-    }
-});
+import createStoreWithFocus from 'focus-graph/store/create-store';
+import dataSetReducer from '../../src/reducer';
+import {amoutToUpperCaseMiddleware, errorFieldMiddleware, ownActiondMiddleware} from '../../src/middleware/user-middleware';
+import DevTools from '../containers/dev-tools'
 
-export default movieStore;
+const store = createStoreWithFocus(
+  // Le reducer de données
+  {dataSet: dataSetReducer},
+  // Le tableau de middleware custom
+  [errorFieldMiddleware, amoutToUpperCaseMiddleware,ownActiondMiddleware], [DevTools.instrument()] // on ajoute les devtools focus
+);
+
+export default store;
 						</code>
 					</pre>
 				</section>
 				<section data-markdown>
-# action
+# Action
 
-- Une action est une fonction
-- Une action doit appeller un service
-- Avec le retour (après l'appel serveur)
-- Dispatch le résultat dans le `dispatcher`
-- On peut utiliser le `actionBuilder` ([detail](https://github.com/KleeGroup/focus-core/blob/develop/src/application/action-builder.js), [recherche](https://github.com/KleeGroup/focus-core/blob/develop/src/search/action-builder.js), [liste](https://github.com/KleeGroup/focus-core/blob/develop/src/list/action-builder.js))
+- Une action est une fonction que l'on dipstach 
+- Elle possède un type qui permet d'enregistrer des reducers associés
+- On peut utiliser le `actionBuilder` 
 				</section>
 				<section>
 					<h2>Exemple d'action</h2>
 					<pre>
 						<code class='javascript'>
-import actionBuilder from 'focus-core/application/action-builder';
-import {loadMovie, saveMovieSynopsis} from '../services/movie';
+import {actionBuilder} from 'focus-graph/actions/entity-actions-builder';
+import {loadUser, saveUser} from '../services/user-service';
 
-export const synopsisActions = {
-    load: actionBuilder({
-        node: 'movie',
-        service: loadMovie,
-        shouldDumpStoreOnActionCall: true,
-        status: 'loaded'
-    }),
-    save: actionBuilder({
-        node: 'movie',
-        service: saveMovieSynopsis,
-        shouldDumpStoreOnActionCall: true,
-        status: 'saved'
-    })
-}
+const _loadUserAction = actionBuilder({names: ['user'], type: 'load', service: loadUser});
+export const loadUserTypes = _loadUserAction.types;
+export const loadUserAction = _loadUserAction.action;
+
+const _saveUserAction = actionBuilder({names: ['user'], type: 'save', service: saveUser});
+export const saveUserTypes = _saveUserAction.types;
+export const saveUserAction = _saveUserAction.action;
 						</code>
 					</pre>
 				</section>
+				<section data-markdown>
+# Reducer
+
+Un reducer est une fonction pure ( pas liée à un contexte, dans d'autres termes une fonction static! ) avec une signature très simple : (previousState, action) => newState
+- On peut utiliser le `reducerBuilder` 
+				</section>
+				<section>
+					<h2>Exemple d'action</h2>
+					<pre>
+						<code class='javascript'>
+import {reducerBuilder} from 'focus-graph/reducers/reducer-builder';
+import {loadUserTypes} from '../actions/user-actions';
+import {saveUserTypes} from '../actions/user-actions';
+
+// Données initiales pour la state redux
+const DEFAULT_DATA = {
+    firstName:'Amélie'
+};
+
+// Utilisation du reducerBuilder qui attend un name correspondant à votre entité, puis les types de load renvoyés par les actions
+// mais aussi les types des saves et enfin les defaultData.
+const userReducer = reducerBuilder({
+    name: 'user',
+    loadTypes: loadUserTypes,
+    saveTypes: saveUserTypes,
+    defaultData: DEFAULT_DATA
+});
+
+export default userReducer;
+						</code>
+					</pre>
+				</section>				
 				<section data-background='http://auto.mgl.skyrock.net/art/SHAR.8448.337.2.jpg'>
 					<h2>Un exemple de composant mis en musique</h2>
 					<pre>
 						<code class="javascript">
-//librairies
-import React, {PropTypes} from 'react';
-import FocusComponents from 'focus-components';
+import React, {Component, PropTypes} from 'react';
+import {connect as connectToForm } from 'focus-graph/behaviours/form';
+import {connect as connectToMetadata} from 'focus-graph/behaviours/metadata';
+import {connect as connectToFieldHelpers} from 'focus-graph/behaviours/field';
+import {loadUserAction, saveUserAction} from '../../actions/user-actions';
 
-// web components
-import Panel from 'focus-components/components/panel';
-import {mixin as formMixin} from 'focus-components/common/form';
+import Panel from 'focus-graph/components/panel';
+import {compose} from 'redux';
 
-//stores & actions
-import movieStore from '../../../stores/movie';
-import {caracteristicsActions} from '../../../action/movie';
+const User = ({fieldFor, ...otherProps}) => (
+  &lt;Panel title='User' {...otherProps}>
+      {fieldFor('uuid', {entityPath: 'user'})}
+      {fieldFor('firstName', {entityPath: 'user'})}
+      {fieldFor('lastName', {entityPath: 'user'})}
+  &lt;/Panel>
+)
 
-export default React.createClass({
-    displayName: 'MovieCaracteristics',
-    propTypes: {
-        id: PropTypes.number
-    },
-    mixins: [formMixin],
-    definitionPath: 'movie',
-    stores: [{store: movieStore, properties: ['movie']}],
-    action: caracteristicsActions,
 
-    /** @inheritDoc */
-    renderContent() {
+class SmartUser extends Component {
+    componentWillMount() {
+        const {id, load} = this.props;
+        // Et voilà un load !
+        load({id});
+    }
+
+    render() {
+        const {fieldFor} = this.props;
         return (
-            <Panel actions={this._renderActions} title='movie.detail.caracteristics'>
-                {this.fieldFor('title')}
-                {this.fieldFor('originalTitle')}
-                {this.fieldFor('keywords')}
-                {this.fieldFor('runtime')}
-                {this.fieldFor('movieType')}
-                {this.fieldFor('productionYear')}
-                {this.fieldFor('trailerName')}
-                {this.fieldFor('trailerHRef')}
-            </Panel>
+          &lt;User fieldFor={fieldFor} { ...this.props}/>
         );
     }
-});
-						</code>
+};
+
+User.displayName = 'SmartUser';
+
+const formConfig = {
+    formKey: 'userForm',
+    entityPathArray: ['user'],
+    loadAction: loadUserAction,
+    saveAction: saveUserAction,
+    nonValidatedFields: ['user.firstName']
+};
+
+const ConnectedUserForm = compose(
+    connectToMetadata(['user']),
+    connectToForm(formConfig),
+    connectToFieldHelpers()
+)(SmartUser );
+
+export default ConnectedUserForm;					</code>
 					</pre>
 				</section>
 			</section>
 			<section data-markdown>
 	## tutos
-	- [Faire une page de détail](http://kleegroup.github.io/focus-docs/tutorial/detail.html)
-	- [Faire une page de liste](http://kleegroup.github.io/focus-docs/tutorial/list.html)
+	- [Faire une page](https://github.com/get-focus/focus-tuto-v3)
 	</section>
 	<section data-markdown>
 				## Structure applicative
